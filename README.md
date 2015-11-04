@@ -9,6 +9,7 @@ Quickstart
 
 ````shell
 cd packer
+# add --debug to step through each phase
 packer build centos7.json
 vagrant box add --name odpi-test-0 --provider virtualbox builds/virtualbox-centos7.box
 ````
