@@ -1,2 +1,2 @@
-# odp-sandbox
-ODP sandbox automation
+# odpi-sandbox
+ODPi sandbox automation
