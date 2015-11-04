@@ -60,6 +60,8 @@ target/
 # ISOs
 isos/*
 
-
 # vbox artifacts
 output-virtualbox-iso/*
+
+# packer builds
+builds/*
