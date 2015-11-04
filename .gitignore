@@ -54,14 +54,14 @@ coverage.xml
 docs/_build/
 
 # PyBuilder
-target/
+packer/target/
 
 
 # ISOs
-isos/*
+packer/isos/*
 
 # vbox artifacts
-output-virtualbox-iso/*
+packer/output-virtualbox-iso/*
 
 # packer builds
-builds/*
+packer/builds/*
