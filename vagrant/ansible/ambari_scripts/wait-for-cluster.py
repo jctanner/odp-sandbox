@@ -24,8 +24,11 @@ def isclusterbusy(cluster_name):
     print "# %s" % r.status_code
     data = json.loads(r.text)
     state = data.get("Clusters", {}).get("provisioning_state", None)
+
+    # "provisioning_state" : "INSTALLED"
+
     print "# state: %s" % state
-    if not state or state == "INIT":
+    if not state or state == "INIT" or state != "INSTALLED":
         return True
     else:
         return False
