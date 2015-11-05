@@ -65,3 +65,6 @@ packer/output-virtualbox-iso/*
 
 # packer builds
 packer/builds/*
+
+# vagrant 
+vagrant/.vagrant/*
