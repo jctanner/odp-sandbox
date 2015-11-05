@@ -1,0 +1,18 @@
+#VERSION_NUMBER=0.9.0.1-55
+[ODP-0.9.0.1-55]
+name=ODP Version - ODP-0.9.0.1-55
+baseurl=http://repo.opendataplatform.org/repository/ODP/centos7/2.x/BUILDS/0.9.0.1-55
+gpgcheck=1
+gpgkey=http://repo.opendataplatform.org/repository/ODP/centos7/2.x/BUILDS/0.9.0.1-55/RPM-GPG-KEY/RPM-GPG-KEY-Jenkins
+enabled=1
+priority=1
+
+
+[ODP-UTILS-1.1.0.20]
+name=ODP Utils Version - ODP-UTILS-1.1.0.20
+baseurl=http://repo.opendataplatform.org/repository/ODP-UTILS-1.1.0.20/repos/centos7
+gpgcheck=1
+gpgkey=http://repo.opendataplatform.org/repository/ODP/centos7/2.x/updates/0.9.0.1/RPM-GPG-KEY/RPM-GPG-KEY-Jenkins
+enabled=1
+priority=1
+

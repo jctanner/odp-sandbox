@@ -1,0 +1,8 @@
+[ODP-0.9]
+name=ODP-0.9
+baseurl=http://repo.opendataplatform.org/repository/ODP/centos7/2.x/BUILDS/0.9.0.1-55
+
+path=/
+enabled=1
+gpgcheck=0
+

@@ -1,0 +1,96 @@
+#!/bin/bash
+# startup script
+# chkconfig: 345 89 1
+### BEGIN INIT INFO
+# provides: Startup_Script
+# Required-Start:
+# Required-Stop:
+# Default-Start: 3 4 5
+# Default-Stop: 0 1 6
+# Description: startup script
+### END INIT INFO
+
+
+NAME="startup_script"
+LOG="/var/log/startup_script.log"
+SCRIPTS_PATH="/root/"
+
+PATH="/sbin:/usr/sbin:/bin:/usr/bin"
+export PATH
+
+source $SCRIPTS_PATH/consts.sh
+
+function restart() {
+    date >> $LOG
+    [ "$1" == "-r" ] && str="Stopping odp..." || str="Starting odp..."
+    printf "%-70s\n" "$str" | tee -a $LOG
+    bash $SCRIPTS_PATH/stop.sh >> $LOG 2>&1
+
+    [ "$1" == "-r" ] && printf "%-70s\n" "Starting odp..." | tee -a $LOG
+    bash $SCRIPTS_PATH/start.sh >> $LOG 2>&1
+}
+
+
+case "$1" in
+start)
+    printf "%-50s\n" "Starting $NAME..." | tee -a $LOG
+
+    rm -f /var/run/hadoop-yarn/yarn/* && rm -f /var/run/hadoop-mapred/mapred/*
+    rm -f /var/run/hadoop-yarn/yarn/* && rm -f /var/run/hadoop-mapreduce/mapred/*
+    mkdir -p /var/run/hadoop-yarn/yarn
+    chown yarn:hadoop /var/run/hadoop-yarn/yarn/
+    chmod 755 /var/run/hadoop-yarn/yarn/
+    
+    mkdir -p /var/run/hadoop-mapreduce/mapred
+    chown mapred:hadoop /var/run/hadoop-mapreduce/mapred/
+    chmod 755 /var/run/hadoop-mapreduce/mapred/
+
+    rm -f /var/run/hadoop/hdfs/*
+    mkdir -p /var/run/hadoop/hdfs
+    chown hdfs:hadoop /var/run/hadoop/hdfs
+    chmod 775 /var/run/hadoop/hdfs
+
+    rm -f /var/run/zookeeper/*
+    mkdir -p /var/run/zookeeper
+    chown zookeeper:hadoop /var/run/zookeeper
+    chmod 755 /var/run/zookeeper
+    
+    rm -f /var/run/ambari-metrics-collector/*
+    mkdir /var/run/ambari-metrics-collector
+    chown ams:hadoop /var/run/ambari-metrics-collector
+    chmod 755 /var/run/ambari-metrics-collector
+    
+    rm -f /var/run/ambari-metrics-monitor/*
+    mkdir  /var/run/ambari-metrics-monitor/
+    chown ams:hadoop  /var/run/ambari-metrics-monitor/
+    chmod 755  /var/run/ambari-metrics-monitor/
+    
+   
+    echo "Starting odp ..."
+    #cp -f /etc/knox/sandbox.xml.provided /etc/knox/conf/topologies/sandbox.xml # knox topology setup
+    make --makefile $SCRIPTS_PATH/start_deps.mf -B Startup -j -i
+
+    printf "%-50s\n" "Starting ODP sandbox..." | tee -a $LOG
+    
+    echo 0 > /proc/sys/kernel/hung_task_timeout_secs
+
+    
+    stty -F /dev/tty1 -echo
+    # drop caches (minimize swapping)
+    sync && echo 3 > /proc/sys/vm/drop_caches && echo 0 > /proc/sys/vm/drop_caches
+;;
+stop)
+    date >> $LOG
+    bash $SCRIPTS_PATH/stop.sh >> $LOG 2>&1
+;;
+
+restart)
+    $0 stop
+    $0 start
+;;
+
+*)
+        echo "Usage: $0 {start|stop|restart}"
+        exit 1
+esac
+

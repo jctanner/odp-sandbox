@@ -1,0 +1,10 @@
+- name: setup the sandbox
+  hosts: sandbox
+  gather_facts: True
+  sudo: True
+  sudo_user: root
+  tasks:
+
+
+    - debug: var=hostvars
+    - debug: var=hostvars[inventory_hostname]['ansible_default_ipv4']['address']

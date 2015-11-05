@@ -1,0 +1,118 @@
+- name: setup the sandbox
+  hosts: sandbox
+  gather_facts: True
+  sudo: True
+  sudo_user: root
+  tasks:
+
+    - name: set the hostname to sandbox.odp.org
+      shell: hostnamectl set-hostname sandbox.odp.org
+
+
+    - name: ensure libsolve goes to the right IP address
+      lineinfile:
+        dest: /etc/hosts
+        regexp: 'sandbox.odp.org$'
+        line: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] + ' sandbox.odp.org' }}"
+        state: present
+
+
+    - name: add the ODPi repos
+      copy: 
+        src: "{{ 'files/'+ item }}"
+        dest: "{{ '/etc/yum.repos.d/' + item }}"
+      with_items:
+        - ambari.repo
+        - odp.repo
+        - ODP.repo
+        - ODP-UTILS.repo        
+ 
+    - name: install epel-release
+      yum: name=epel-release state=present
+  
+    - name: install ambari packages
+      yum: name={{ item }} state=present
+      with_items:
+        - ambari-agent
+        - ambari-server
+
+    - name: install api helper packages
+      yum: name=python-requests state=present
+
+
+    # Oracle JRE+JDK+JCE
+    - name: install the oracle packages
+      script: "{{ item }}"
+      with_items:
+        - files/fetch_oracle_jre.sh
+        - files/fetch_oracle_jdk.sh
+        - files/fetch_oracle_jce.sh
+    - name: trick the installer into using the latest jre
+      file: 
+        src: /var/lib/ambari-server/resources/jre-8u66-linux-x64.tar.gz
+        dest: /var/lib/ambari-server/resources/jre-8u40-linux-x64.tar.gz
+        state: link
+    - name: trick the installer into using the latest jdk
+      file: 
+        src: /var/lib/ambari-server/resources/jdk-8u66-linux-x64.tar.gz
+        dest: /var/lib/ambari-server/resources/jdk-8u40-linux-x64.tar.gz
+        state: link
+
+
+    # Ambari Agent
+    - name: set the hostname in the agent config
+      lineinfile:
+        dest: /etc/ambari-agent/conf/ambari-agent.ini
+        regexp: '^hostname='
+        line: "hostname=sandbox.odp.org"
+    - name: start the agent
+      service: name=ambari-agent state=started
+    - service: name=ambari-agent enabled=true
+
+
+    # Postgres
+    - name: initialize postgres
+      shell: service postgresql initdb creates=/var/lib/pgsql/data/pg_hba.conf
+    - service: name=postgresql enabled=true
+    - service: name=postgresql state=started
+
+
+    # Ambari server
+    - name: check if the service was already initialized
+      shell: "[ -f /var/lib/ambari-server/keys/ca.crt ]"
+      ignore_errors: True
+      register: ambari_created
+    - shell: ambari-server reset --verbose -s
+      when: ambari_created.rc != 0
+    - shell: ambari-server setup --verbose -s
+      when: ambari_created.rc != 0
+      register: spawning
+
+    - name: give ambari a few seconds to settle
+      pause: seconds=5
+      when: spawning.changed
+
+    # systemd thinks ambari is broken, so ignore errors
+    - name: turn the server on
+      service: name=ambari-server state=started
+      ignore_errors: True
+    - name: turn the server on
+      service: name=ambari-server enabled=yes
+
+
+    # Handle blueprint
+    - name: copy the blueprint to the sandbox
+      copy: src=files/odp-0.9.blueprint dest=/root/odp-0.9.blueprint      
+    - name: apply the blueprint
+      script: ambari_scripts/post-blueprint.py /root/odp-0.9.blueprint ODP-0.9-Sandbox
+
+
+    # Make the cluster
+    - name: create the cluster 
+      script: ambari_scripts/post-mapping.py ODP-0.9-Sandbox ODP_Sandbox
+
+
+    # Wait for the cluster
+    - name: wait for the cluster 
+      script: ambari_scripts/wait-for-cluster.py ODP_Sandbox
+

@@ -1,0 +1,138 @@
+line = 10
+LOG=/var/log/startup_script.log
+
+NO_COLOR=\x1b[0m
+OK_COLOR=\x1b[32;01m
+ERROR_COLOR=\x1b[31;01m
+WARN_COLOR=\x1b[33;01m
+
+OK_STRING=[$(OK_COLOR)  OK  $(NO_COLOR)]
+ERROR_STRING=[$(ERROR_COLOR)ERRORS$(NO_COLOR)]
+WARN_STRING=[$(WARN_COLOR)WARNINGS$(NO_COLOR)]
+
+ECHO=echo -e
+ECHO_ERR=printf 'Starting%-50s$(ERROR_STRING)\n' "$1"
+ECHO_WARN=printf 'Starting%-50s$(WARN_STRING)\n' "$1"
+ECHO_OK=printf 'Starting%-50s$(OK_STRING)\n' "$1"
+CAT=cat
+
+define colorized
+@$2 1>$(LOG) 2> "temp $1.log" || touch temp.errors;
+@$3;
+@if test -e "temp $1.errors"; then ($(ECHO_ERR) | tee -a $(LOG)) && ($(CAT) "temp $1.log" $4 | tee -a $(LOG)); elif test -s "temp $1.log"; then ($(ECHO_WARN) && $(CAT) "temp $1.log") | tee -a $(LOG); else $(ECHO_OK) | tee -a $(LOG); fi;
+@$(RM) -f "temp $1.errors" "temp $1.log";
+endef
+
+all: Startup Ambari Others
+
+Startup: HDFS YARN Zookeeper Ambari
+	@echo "`date`:\tStartup" >> $(LOG)
+Ambari: ams_metrics_collector ams_metrics_monitor
+Others: HBase Storm
+
+HDFS: namenode secondary_namenode datanode nfsportpap hdfsnfs
+YARN: resourcemanager yarnhistoryserver mapredhistoryserver nodemanagers
+HBase: hbase_master hbase_regionservers hbase_stargate hbase_thrift
+Zookeeper: zookeeper
+Hive_Metastore: mysql hive hive2
+Storm: nimbus supervisor stormui stormdrpc stormlogview # stormrest
+WebHCat: webhcat
+Tez: # tez
+Oozie: oozie
+
+postgresql:
+	$(call colorized,\
+		Postgre SQL, \
+		@/etc/init.d/postgresql start,\
+		sleep 10,)
+
+# ==== HDFS ====
+
+namenode: postgresql
+	$(call colorized,\
+		name node, \
+		su - hdfs -c 'export HADOOP_LIBEXEC_DIR=/usr/odp/current/hadoop-client/libexec && /usr/odp/current/hadoop-client/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start namenode',\
+		sleep 5,\
+		/var/log/hadoop/hdfs/hadoop-hdfs-namenode-*.log)
+
+datanode: postgresql
+	$(call colorized,\
+		data node, \
+		su - hdfs -c 'export HADOOP_LIBEXEC_DIR=/usr/odp/current/hadoop-client/libexec && /usr/odp/current/hadoop-client/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start datanode',\
+		sleep 5,\
+		/var/log/hadoop/hdfs/hadoop-hdfs-datanode-*.log)
+	@su - hdfs -c"hdfs dfsadmin -safemode leave"
+
+
+secondary_namenode: postgresql
+	$(call colorized,\
+		secondary name node, \
+		su - hdfs -c 'export HADOOP_LIBEXEC_DIR=/usr/odp/current/hadoop-client/libexec && /usr/odp/current/hadoop-client/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start secondarynamenode',\
+		sleep 5,\
+		/var/log/hadoop/hdfs/hadoop-hdfs-secondarynamenode-*.log)
+
+nfsportpap: Ambari namenode datanode
+	$(call colorized,\
+		NFS portmap, \
+		su - root -c 'export HADOOP_LIBEXEC_DIR=/usr/odp/current/hadoop-client/libexec && /usr/odp/current/hadoop-client/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start portmap',\
+		sleep 5,\
+		/var/log/hadoop/root/hadoop-root-portmap-sandbox.hortonworks.com.log)
+
+hdfsnfs: Ambari namenode datanode nfsportpap
+	$(call colorized,\
+		Hdfs nfs, \
+		su - root -c 'export HADOOP_PRIVILEGED_NFS_LOG_DIR=/var/log/hadoop/root HADOOP_PRIVILEGED_NFS_PID_DIR=/var/run/hadoop/root HADOOP_PRIVILEGED_NFS_USER=hdfs HADOOP_LIBEXEC_DIR=/usr/odp/current/hadoop-client/libexec && /var/lib/ambari-agent/ambari-sudo.sh -H -E /usr/odp/current/hadoop-client/sbin/hadoop-daemon.sh --config /etc/hadoop/conf start nfs3',\
+		sleep 5,\
+		/var/log/hadoop/root/hadoop-root-nfs3-sandbox.hortonworks.com.log)
+
+
+# ==== YARN ====
+resourcemanager: postgresql HDFS
+	$(call colorized,\
+		resource manager, \
+		su - yarn -c'export HADOOP_LIBEXEC_DIR=/usr/odp/current/hadoop-client/libexec && /usr/odp/current/hadoop-yarn-client/sbin/yarn-daemon.sh --config /etc/hadoop/conf start resourcemanager',\
+		sleep 25)
+
+
+yarnhistoryserver: postgresql HDFS
+	$(call colorized,\
+		yarn history server, \
+		su - yarn -c'export HADOOP_LIBEXEC_DIR=/usr/odp/current/hadoop-client/libexec && /usr/odp/current/hadoop-yarn-client/sbin/yarn-daemon.sh --config /etc/hadoop/conf start timelineserver',\
+		sleep 5)
+
+mapredhistoryserver: postgresql HDFS
+	$(call colorized,\
+		mapred history server, \
+		su - mapred -c'export HADOOP_LIBEXEC_DIR=/usr/odp/current/hadoop-client/libexec && /usr/odp/current/hadoop-mapreduce-historyserver/sbin/mr-jobhistory-daemon.sh --config /etc/hadoop/conf start historyserver',\
+		sleep 5)
+
+
+nodemanagers: postgresql HDFS
+	$(call colorized,\
+		node manager, \
+		su - yarn -c 'export HADOOP_LIBEXEC_DIR=/usr/odp/current/hadoop-client/libexec && /usr/odp/current/hadoop-yarn-client/sbin/yarn-daemon.sh --config /etc/hadoop/conf start nodemanager',\
+		sleep 5)
+
+
+
+
+# ==== Single services ====
+
+zookeeper: namenode
+	$(call colorized,\
+		zookeeper nodes, \
+		su - zookeeper -c "source /etc/zookeeper/conf/zookeeper-env.sh ; env ZOOCFGDIR=/etc/zookeeper/conf ZOOCFG=zoo.cfg /usr/odp/current/zookeeper-server/bin/zkServer.sh start; sleep 10",\
+		true)
+
+ams_metrics_collector:
+	$(call colorized,\
+		ams collect, \
+		su - ams -c '/usr/sbin/ambari-metrics-collector --config /etc/ambari-metrics-collector/conf start',\
+		sleep 5)
+
+ams_metrics_monitor:
+	$(call colorized,\
+		ams monitor, \
+		su - ams -c '/usr/sbin/ambari-metrics-monitor --config /etc/ambari-metrics-monitor/conf/ start',\
+		sleep 5)
+

@@ -1,0 +1,8 @@
+[ODP-UTILS-1.1.0.20]
+name=ODP-UTILS-1.1.0.20
+baseurl=http://repo.opendataplatform.org/repository/ODP-UTILS-1.1.0.20/repos/centos7
+
+path=/
+enabled=1
+gpgcheck=0
+
