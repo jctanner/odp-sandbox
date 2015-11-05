@@ -6,6 +6,7 @@ import requests
 import shlex
 import socket
 import sys
+import pprint
 
 def constructInventory():
     data = {}
@@ -27,7 +28,7 @@ def constructInventory():
     flines = [x for x in flines if not x.startswith('#')]
 
     for x in flines:
-        if x.startswith('127.0.0.1'):
+        if x.startswith('127.0.0.1') or 'localhost' in x:
             continue
 
         parts = shlex.split(x)
@@ -68,46 +69,101 @@ def check_cluster(cluster_name):
     else:
         return True
 
+def construct_and_post_payload(blueprint_name, cluster_name):
 
-def post_mapping(blueprint_name, cluster_name):
+    # http://www.pythian.com/blog/ambari-blueprints-and-one-touch-hadoop-clusters/
+    '''
+    {
+      "blueprint":"hadoop-benchmark",
+      "host_groups: [
+        { 
+          "name":"master",
+          "hosts":[{"fqdn":"host-1"}]
+        },
+        {
+          "name":"slaves",
+          "hosts":[ 
+            {"fqdn":"host-2"},
+            {"fqdn":"host-3"}  
+          ]
+      ]
+    }
+    '''
 
-    if not check_cluster(cluster_name):
+    # https://blog.codecentric.de/en/2014/05/lambda-cluster-provisioning/
+    '''
+	{ "blueprint":"blueprint-c1",
+	  "host-groups":[
+		{ "name":"host_group_1",
+		  "hosts":[
+			{ "fqdn":"one.cluster",
+			  "ip":"192.168.0.101" }, ... ] }, ... ] }
+    '''
 
-        inventory = constructInventory()
-        hosts = inventory['nodes']['hosts']
+    inventory = constructInventory()
+    hosts = inventory['nodes']['hosts']
 
-        # Create the first group
-        group1 = {'name': 'host_group_1',
-                  'hosts': [] }
+    # Create the first group
+    group1 = {'name': 'host_group_1',
+              'hosts': [] }
 
-        # Create the mapping structure for the POST
-        data = {'blueprint': blueprint_name,
-                'host_groups': [group1] }
+    # Create the mapping structure for the POST
+    data = {'blueprint': blueprint_name,
+            'host_groups': [group1] }
 
-        # Add each host to group1
-        for host in hosts:
-            host_dict = {'fqdn': host,
-                         'ip': inventory['_meta']['hostvars'][host]['ip_address']}            
-            data['host_groups'][0]['hosts'].append(host_dict)
+    # Add each host to group1
+    for host in hosts:
+        host_dict = {'fqdn': host,
+                     'ip': inventory['_meta']['hostvars'][host]['ip_address']}            
+        data['host_groups'][0]['hosts'].append(host_dict)
 
-        print data
+    #print data
+    #pprint.pprint(data)
+	print json.dumps(data, indent=True)
+    #sys.exit(1)
 
-        # POST to /api/v1/clusters/<CLUSTER_NAME>
+
+    # POST to /api/v1/clusters/<CLUSTER_NAME>
+    hostname = socket.gethostname()
+    headers = {'X-Requested-By': 'AMBARI'}
+    baseurl = "http://%s:8080/api/v1/clusters/%s" % (hostname, cluster_name)
+    print "# POST --> %s" % baseurl
+    r = requests.post(baseurl, auth=('admin', 'admin'), 
+                        data=json.dumps(data), headers=headers)
+
+    print "# %s" % r.status_code
+    for x in r.text.split('\n'):
+        print "# %s" % x
+
+
+def validate_hosts_registered():
+    
+    inventory = constructInventory()
+    hosts = inventory['nodes']['hosts']
+
+    for x in hosts:
         hostname = socket.gethostname()
         headers = {'X-Requested-By': 'AMBARI'}
-        baseurl = "http://%s:8080/api/v1/clusters/%s" % (hostname, cluster_name)
+        baseurl = "http://%s:8080/api/v1/hosts/%s" % (hostname, x)
         print "# POST --> %s" % baseurl
-        r = requests.post(baseurl, auth=('admin', 'admin'), 
-                            data=json.dumps(data), headers=headers)
+        r = requests.get(baseurl, auth=('admin', 'admin'), headers=headers)
 
-        print "# %s" % r.status_code
-        for x in r.text.split('\n'):
-            print "# %s" % x
+        if r.status_code != 200:
+            print "%s is not registered, failing!"
+            sys.exit(1)
+        else:
+            print "# host: %s is registered" % x
 
+def post_mapping(blueprint_name, cluster_name, checkhosts=True, checkcluster=False):
+
+    if checkhosts:
+        validate_hosts_registered()
+
+    if checkcluster:
+        if not check_cluster(cluster_name):
+            construct_and_post_payload(blueprint_name, cluster_name)
     else:
-        # Poll till it has no running jobs?
-        pass
-
+        construct_and_post_payload(blueprint_name, cluster_name)
 
 
 if __name__ == "__main__":

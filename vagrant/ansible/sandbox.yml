@@ -31,7 +31,7 @@
       yum: name=epel-release state=present
   
     - name: install ambari packages
-      yum: name={{ item }} state=present
+      yum: name={{ item }} state=latest
       with_items:
         - ambari-agent
         - ambari-server
@@ -65,10 +65,11 @@
         dest: /etc/ambari-agent/conf/ambari-agent.ini
         regexp: '^hostname='
         line: "hostname=sandbox.odp.org"
+    - name: workaround bug in recent ambari agent
+      file: path=/var/lib/ambari-agent/keys state=directory
     - name: start the agent
       service: name=ambari-agent state=started
     - service: name=ambari-agent enabled=true
-
 
     # Postgres
     - name: initialize postgres
@@ -101,18 +102,18 @@
 
 
     # Handle blueprint
-    - name: copy the blueprint to the sandbox
-      copy: src=files/odp-0.9.blueprint dest=/root/odp-0.9.blueprint      
-    - name: apply the blueprint
-      script: ambari_scripts/post-blueprint.py /root/odp-0.9.blueprint ODP-0.9-Sandbox
+    #- name: copy the blueprint to the sandbox
+    #  copy: src=files/odp-0.9.blueprint dest=/root/odp-0.9.blueprint      
+    #- name: apply the blueprint
+    #  script: ambari_scripts/post-blueprint.py /root/odp-0.9.blueprint ODP-0.9-Sandbox
 
 
     # Make the cluster
-    - name: create the cluster 
-      script: ambari_scripts/post-mapping.py ODP-0.9-Sandbox ODP_Sandbox
+    #- name: create the cluster 
+    #  script: ambari_scripts/post-mapping.py ODP-0.9-Sandbox ODP_Sandbox
 
 
     # Wait for the cluster
-    - name: wait for the cluster 
-      script: ambari_scripts/wait-for-cluster.py ODP_Sandbox
+    #- name: wait for the cluster 
+    #  script: ambari_scripts/wait-for-cluster.py ODP_Sandbox
 
