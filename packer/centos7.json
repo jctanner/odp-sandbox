@@ -33,11 +33,11 @@
       "headless": true,
       "http_directory": "http",
       "iso_urls": [
-        "isos/CentOS-7-x86_64-Minimal-1503-01.iso",
-        "http://centos.mirrors.hoobly.com/7/isos/x86_64/CentOS-7-x86_64-Minimal-1503-01.iso"
+        "isos/CentOS-7-x86_64-Everything-1503-01.iso",
+        "http://centos.mirrors.hoobly.com/7/isos/x86_64/CentOS-7-x86_64-Everything-1503-01.iso"
       ],
-      "iso_checksum_type": "md5",
-      "iso_checksum": "d07ab3e615c66a8b2e9a50f4852e6a77",
+      "iso_checksum_type": "none",
+      "iso_checksum": "186b049a88b18f7d43e03eed72247c76",
       "ssh_username": "vagrant",
       "ssh_password": "vagrant",
       "ssh_port": 22,
