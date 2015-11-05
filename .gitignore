@@ -68,3 +68,5 @@ packer/builds/*
 
 # vagrant 
 vagrant/.vagrant/*
+vagrant/mirror/*
+
