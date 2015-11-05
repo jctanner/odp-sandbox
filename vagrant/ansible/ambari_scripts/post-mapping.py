@@ -154,10 +154,27 @@ def validate_hosts_registered():
         else:
             print "# host: %s is registered" % x
 
+def validate_host_in_cluster(host, clustername):
+    hostname = socket.gethostname()
+    headers = {'X-Requested-By': 'AMBARI'}
+    baseurl = "http://%s:8080/api/v1/clusters/%s/hosts" % (hostname, clustername)
+    r = requests.get(baseurl, auth=('admin', 'admin'), headers=headers)
+
+    import pdb; pdb.set_trace()
+
+
+
 def post_mapping(blueprint_name, cluster_name, checkhosts=True, checkcluster=False):
+
+    inventory = constructInventory()
+    hosts = inventory['nodes']['hosts']
 
     if checkhosts:
         validate_hosts_registered()
+        #for x in hosts:
+        #    validate_host_in_cluster(x, cluster_name)
+
+    #sys.exit(1)
 
     if checkcluster:
         if not check_cluster(cluster_name):

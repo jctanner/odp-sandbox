@@ -38,8 +38,13 @@ def check_blueprint(blueprint_name):
 
 def post_blueprint(blueprint, blueprintname):
 
+    # validate_topolgy=false seems to be very important
+    # with making single node sandboxes. I keep running
+    # into nonsensical 500ISEs when I try to post the 
+    # host mapping afterwards, unless I set the parameter.
+
     hostname = socket.gethostname()
-    baseurl = "http://%s:8080/api/v1/blueprints/%s" % (hostname, blueprintname)
+    baseurl = "http://%s:8080/api/v1/blueprints/%s?validate_topology=false" % (hostname, blueprintname)
     print "# %s" %  baseurl
     f = open(blueprint, 'rb')
     fdata = f.read()
