@@ -23,9 +23,9 @@
         dest: "{{ '/etc/yum.repos.d/' + item }}"
       with_items:
         - ambari.repo
-        - odp.repo
-        - ODP.repo
-        - ODP-UTILS.repo        
+        #- odp.repo
+        #- ODP.repo
+        #- ODP-UTILS.repo        
  
     - name: install epel-release
       yum: name=epel-release state=present
@@ -105,7 +105,20 @@
     #- name: copy the blueprint to the sandbox
     #  copy: src=files/odp-0.9.blueprint dest=/root/odp-0.9.blueprint      
     #- name: apply the blueprint
-    #  script: ambari_scripts/post-blueprint.py /root/odp-0.9.blueprint ODP-0.9-Sandbox
+    #  script: ambari_scripts/post-blueprint.py /root/odp-v2.blueprint ODP-0.9-Sandbox
+
+    ##################################################################
+    # Before the cluster can be created, we need to fix the repo
+    # urls so that packages will get installed. Ambari lays down 
+    # yum repo configs based on these urls and then runs yum commands
+    # restricted to those repos. If the urls are invalid (the default)
+    # then service installation dies a miserable death.
+    ##################################################################
+
+    #- name: add the primary repo
+    #  script: ambari_scripts/post-repo-url.py ODP 0.9 redhat7 ODP-0.9 http://repo.opendataplatform.org/repository/ODP/centos7/2.x/BUILDS/0.9.0.1-70
+    #- name: add the utils repo
+    #  script: ambari_scripts/post-repo-url.py ODP 0.9 redhat7 ODP-UTILS-1.1.0.20 http://repo.opendataplatform.org/repository/ODP-UTILS-1.1.0.20/repos/centos7 
 
 
     # Make the cluster

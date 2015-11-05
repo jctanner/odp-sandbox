@@ -12,9 +12,9 @@ import sys
 PUT /api/v1/stacks/:stack/versions/:stackVersion/operating_systems/:osType/repositories/:repoId
  
 {
-  "Repositories” : {
-    "base_url” : ”<CUSTOM_REPO_BASE_URL>",
-    "verify_base_url” : true
+  "Repositories" : {
+    "base_url" : "<CUSTOM_REPO_BASE_URL>",
+    "verify_base_url" : true
   }
 }
 '''
@@ -50,26 +50,40 @@ PUT /api/v1/stacks/:stack/versions/:stackVersion/operating_systems/:osType/repos
   ]
 '''
 
-def post_stack(cluster_name, stack_name):
+def post_repo(stackname, stackversion, ostype, repoid, repourl):
 
-    data = {'ServiceInfo': {'service_name': stack_name } }
+    # ODP 0.9 redhat7 ODP-0.9 http://repo.opendataplatform.org/repository/ODP/centos7/2.x/BUILDS/0.9.0.1-70
 
-    # POST to /api/v1/clusters/<CLUSTER_NAME>
+    data = {
+      "Repositories" : {
+        "base_url" : "%s" % repourl,
+        "verify_base_url" : True
+      }
+    }
+
     hostname = socket.gethostname()
     headers = {'X-Requested-By': 'FOOBAR'}
-    baseurl = "http://%s:8080/api/v1/clusters/%s/services" % (hostname, cluster_name)
-    print "# POST --> %s" % baseurl
-    r = requests.post(baseurl, auth=('admin', 'admin'), data=json.dumps(data), headers=headers)
+    baseurl = "http://%s:8080/api/v1" % (hostname)
+    baseurl += "/stacks/%s/versions/%s/operating_systems/%s/repositories/%s"  % (stackname, stackversion, ostype, repoid)
+
+    print "# PUT --> %s" % baseurl
+    r = requests.put(baseurl, auth=('admin', 'admin'), data=json.dumps(data), headers=headers)
 
     print "# %s" % r.status_code
     for x in r.text.split('\n'):
         print "# %s" % x
 
-
 if __name__ == "__main__":
 
-    assert len(sys.argv) >= 2, "Usage: <scriptname> <cluster-name> <stack-name>"
+    # ODP 0.9 redhat7 ODP-0.9 http://repo.opendataplatform.org/repository/ODP/centos7/2.x/BUILDS/0.9.0.1-70
+    # ODP 0.9 redhat7 ODP-UTILS-1.1.0.20 http://repo.opendataplatform.org/repository/ODP-UTILS-1.1.0.20/repos/centos7
+    print sys.argv
+    assert len(sys.argv) >= 2, "Usage: <SCRIPT> <stackname> <stackversion> <ostype> <repoid> <repourl>"
 
-    clustername = sys.argv[1]
-    stackname = sys.argv[2]
-    post_stack(clustername, stackname)
+    stackname = sys.argv[1]
+    stackversion = sys.argv[2]
+    ostype = sys.argv[3]
+    repoid = sys.argv[4]
+    repourl = sys.argv[5]
+
+    post_repo(stackname, stackversion, ostype, repoid, repourl)
