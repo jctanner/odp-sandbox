@@ -102,10 +102,10 @@
 
 
     # Handle blueprint
-    #- name: copy the blueprint to the sandbox
-    #  copy: src=files/odp-0.9.blueprint dest=/root/odp-0.9.blueprint      
-    #- name: apply the blueprint
-    #  script: ambari_scripts/post-blueprint.py /root/odp-v2.blueprint ODP-0.9-Sandbox
+    - name: copy the blueprint to the sandbox
+      copy: src=files/odp-v2.blueprint dest=/root/odp-v2.blueprint      
+    - name: apply the blueprint
+      script: ambari_scripts/post-blueprint.py /root/odp-v2.blueprint ODP-0.9-Sandbox
 
     ##################################################################
     # Before the cluster can be created, we need to fix the repo
@@ -115,18 +115,18 @@
     # then service installation dies a miserable death.
     ##################################################################
 
-    #- name: add the primary repo
-    #  script: ambari_scripts/post-repo-url.py ODP 0.9 redhat7 ODP-0.9 http://repo.opendataplatform.org/repository/ODP/centos7/2.x/BUILDS/0.9.0.1-70
-    #- name: add the utils repo
-    #  script: ambari_scripts/post-repo-url.py ODP 0.9 redhat7 ODP-UTILS-1.1.0.20 http://repo.opendataplatform.org/repository/ODP-UTILS-1.1.0.20/repos/centos7 
+    - name: add the primary repo
+      script: ambari_scripts/post-repo-url.py ODP 0.9 redhat7 ODP-0.9 http://repo.opendataplatform.org/repository/ODP/centos7/2.x/BUILDS/0.9.0.1-70
+    - name: add the utils repo
+      script: ambari_scripts/post-repo-url.py ODP 0.9 redhat7 ODP-UTILS-1.1.0.20 http://repo.opendataplatform.org/repository/ODP-UTILS-1.1.0.20/repos/centos7 
 
 
     # Make the cluster
-    #- name: create the cluster 
-    #  script: ambari_scripts/post-mapping.py ODP-0.9-Sandbox ODP_Sandbox
+    - name: create the cluster 
+      script: ambari_scripts/post-mapping.py ODP-0.9-Sandbox ODP_Sandbox
 
 
     # Wait for the cluster
-    #- name: wait for the cluster 
-    #  script: ambari_scripts/wait-for-cluster.py ODP_Sandbox
+    - name: wait for the cluster 
+      script: ambari_scripts/wait-for-cluster.py ODP_Sandbox
 

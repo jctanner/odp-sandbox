@@ -11,6 +11,11 @@
       "script": "scripts/vbox_guest_additions.sh"
     },    
     {
+      "type": "file",
+      "source": "ansible",
+      "destination": "/opt/ansible",
+    },
+    {
       "type": "shell",
       "execute_command": "echo 'vagrant' | {{.Vars}} sudo -S -E bash '{{.Path}}'",
       "script": "scripts/ansible.sh"
