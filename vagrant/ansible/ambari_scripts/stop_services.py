@@ -33,7 +33,7 @@ def stop_services(cluster_name):
 
         rdict = json.loads(r.text)
         #"href" : "http://sandbox.odp.org:8080/api/v1/clusters/ODP_Sandbox/requests/7"
-        import pdb; pdb.set_trace()
+        #import pdb; pdb.set_trace()
         print "# Polling %s shutdown" % x['ServiceInfo']['service_name']
         poll_request(rdict['href'])
 
