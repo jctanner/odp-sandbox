@@ -13,7 +13,7 @@
     {
       "type": "file",
       "source": "ansible",
-      "destination": "/opt/ansible",
+      "destination": "/opt/ansible"
     },
     {
       "type": "shell",
@@ -30,7 +30,27 @@
     {
       "type": "virtualbox-iso",
       "boot_command": [
-        "<tab> text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/centos-7-ks.cfg<enter><wait>"
+        "<tab>",
+        "<bs>",
+        "<bs>",
+        "<bs>",
+        "<bs>",
+        "<bs>",
+        "<bs>",
+        "<bs>",
+        "<bs>",
+        "<bs>",
+        "<bs>",
+        "<bs>",
+        "<bs>",
+        "<bs>",
+        "<bs>",
+        "<bs>",
+        "<bs>",
+        "<bs>",
+        "<bs>",
+        "<bs>",
+        "text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/centos-7-ks.cfg<enter><wait>"
       ],
       "boot_wait": "10s",
       "disk_size": 40000,
