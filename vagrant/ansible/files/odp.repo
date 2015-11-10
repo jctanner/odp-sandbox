@@ -1,6 +1,6 @@
 #VERSION_NUMBER=0.9.0.1-70
 # http://repo.opendataplatform.org/repository/ODP/centos7/2.x/updates/0.9.0.1/odpbn.repo
-[ODP-0.9.0.1-70]
+[ambari]
 name=ODP Version - ODP-0.9.0.1-70
 baseurl=http://repo.opendataplatform.org/repository/ODP/centos7/2.x/BUILDS/0.9.0.1-70
 gpgcheck=1
@@ -9,7 +9,7 @@ enabled=1
 priority=1
 
 
-[ODP-UTILS-1.1.0.20]
+[ambari-utils]
 name=ODP Utils Version - ODP-UTILS-1.1.0.20
 baseurl=http://repo.opendataplatform.org/repository/ODP-UTILS-1.1.0.20/repos/centos7
 gpgcheck=1

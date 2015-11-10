@@ -48,11 +48,20 @@
     - name: install epel-release
       yum: name=epel-release state=present
   
+    - name: install ambari packages with local cache
+      yum: name={{ item }} state=latest disablerepo=ambari,ambari-utils
+      with_items:
+        - ambari-agent
+        - ambari-server
+      when: "{{ packer|bool }}"
+
     - name: install ambari packages
       yum: name={{ item }} state=latest
       with_items:
         - ambari-agent
         - ambari-server
+      when: "{{ not packer|bool }}"
+
 
     - name: install api helper packages
       yum: name=python-requests state=present
