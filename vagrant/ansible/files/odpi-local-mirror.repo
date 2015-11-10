@@ -1,0 +1,7 @@
+[odpilocal]
+name=odpilocal
+baseurl=file:///opt/odpi/mirror/repo.opendataplatform.org/repository/ODP/centos7/2.x/BUILDS/0.9.0.1-70
+enabled=1
+gpgcheck=0
+protect=1
+priority=1

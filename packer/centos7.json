@@ -3,6 +3,11 @@
     {
       "type": "shell",
       "execute_command": "echo 'vagrant' | {{.Vars}} sudo -S -E bash '{{.Path}}'",
+      "script": "scripts/common.sh"
+    },
+    {
+      "type": "shell",
+      "execute_command": "echo 'vagrant' | {{.Vars}} sudo -S -E bash '{{.Path}}'",
       "script": "scripts/vagrant_key.sh"
     },
      {
@@ -10,6 +15,11 @@
       "execute_command": "echo 'vagrant' | {{.Vars}} sudo -S -E bash '{{.Path}}'",
       "script": "scripts/vbox_guest_additions.sh"
     },    
+    {
+      "type": "file",
+      "source": "mirror",
+      "destination": "/opt/opdi"
+    },
     {
       "type": "file",
       "source": "ansible",

@@ -3,6 +3,8 @@
   gather_facts: True
   sudo: True
   sudo_user: root
+  vars:
+    packer: False
   tasks:
 
     - name: set the hostname to sandbox.odp.org
@@ -23,9 +25,23 @@
         dest: "{{ '/etc/yum.repos.d/' + item }}"
       with_items:
         - ambari.repo
-        #- odp.repo
-        #- ODP.repo
-        #- ODP-UTILS.repo        
+
+    # Install the priorities plugin
+    - name: install yum-plugin-priorities
+      yum: name=yum-plugin-priorities state=present
+
+    # copy the local odpi mirror for faster install times during image creation
+    - file: path=/opt/odpi/mirror state=directory
+
+    - name: copy the repo mirror from the /vagrant mount
+      shell: rsync -avz /vagrant/mirror /opt/odpi      
+      when: packer != True
+
+    - copy: src=files/odpi-local-mirror.repo dest=/etc/yum.repos.d/odpi-local-mirror.repo
+
+    # DEBUG
+    - fail: msg="debug quit"
+    
  
     - name: install epel-release
       yum: name=epel-release state=present
