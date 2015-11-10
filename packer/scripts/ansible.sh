@@ -7,4 +7,4 @@ yum -y install epel-release
 yum -y install ansible python-setuptools
 
 # Run Ansible
-cd /opt/ansible ; ansible-playbook -c local -v sandbox.yml
+cd /opt/ansible ; ansible-playbook -c local -e "packer=True" -v sandbox.yml

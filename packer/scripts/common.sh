@@ -1,4 +1,7 @@
 #!/bin/bash
 
-mkdir /opt/odpi
-chmod -R 777 /opt/odpi
+mkdir -p /opt/odpi/mirror
+chmod -R 777 /opt
+
+
+find /opt -type d | xargs ls -al

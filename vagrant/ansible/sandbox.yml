@@ -30,18 +30,20 @@
     - name: install yum-plugin-priorities
       yum: name=yum-plugin-priorities state=present
 
+    - debug: var=packer
+
     # copy the local odpi mirror for faster install times during image creation
     - file: path=/opt/odpi/mirror state=directory
-
+      when: "{{ not packer|bool }}"
+    
     - name: copy the repo mirror from the /vagrant mount
       shell: rsync -avz /vagrant/mirror /opt/odpi      
-      when: packer != True
+      when: "{{ not packer|bool }}"
 
     - copy: src=files/odpi-local-mirror.repo dest=/etc/yum.repos.d/odpi-local-mirror.repo
 
     # DEBUG
-    - fail: msg="debug quit"
-    
+    #- fail: msg="debug quit"
  
     - name: install epel-release
       yum: name=epel-release state=present

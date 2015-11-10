@@ -17,8 +17,8 @@
     },    
     {
       "type": "file",
-      "source": "mirror",
-      "destination": "/opt/opdi"
+      "source": "mirror/repo.opendataplatform.org",
+      "destination": "/opt/odpi/mirror/"
     },
     {
       "type": "file",
