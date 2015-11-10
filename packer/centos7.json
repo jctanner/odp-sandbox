@@ -21,14 +21,17 @@
       "destination": "/opt/odpi/mirror/"
     },
     {
-      "type": "file",
-      "source": "ansible",
-      "destination": "/opt/ansible"
-    },
-    {
       "type": "shell",
       "execute_command": "echo 'vagrant' | {{.Vars}} sudo -S -E bash '{{.Path}}'",
       "script": "scripts/ansible.sh"
+    },
+    {
+      "type": "ansible-local",
+      "playbook_file": "ansible/sandbox.yml",
+      "playbook_dir": "ansible",
+      "staging_directory": "/opt/odpi/ansible",
+      "inventory_file": "ansible/inventory.packer",
+      "extra_arguments": ["-e", "packer=True"]
     },
     {
       "type": "shell",
