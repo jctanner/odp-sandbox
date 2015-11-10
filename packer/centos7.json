@@ -31,7 +31,7 @@
       "playbook_dir": "ansible",
       "staging_directory": "/opt/odpi/ansible",
       "inventory_file": "ansible/inventory.packer",
-      "extra_arguments": ["-e", "packer=True"]
+      "extra_arguments": ["-v", "-e", "packer=True"]
     },
     {
       "type": "shell",
