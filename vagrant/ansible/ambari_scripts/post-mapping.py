@@ -145,11 +145,11 @@ def validate_hosts_registered():
         hostname = socket.gethostname()
         headers = {'X-Requested-By': 'AMBARI'}
         baseurl = "http://%s:8080/api/v1/hosts/%s" % (hostname, x)
-        print "# POST --> %s" % baseurl
+        print "# GET --> %s" % baseurl
         r = requests.get(baseurl, auth=('admin', 'admin'), headers=headers)
 
         if r.status_code != 200:
-            print "%s is not registered, failing!"
+            print "%s: %s is not registered, failing!" % (r.status_code, x)
             sys.exit(1)
         else:
             print "# host: %s is registered" % x

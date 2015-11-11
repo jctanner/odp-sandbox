@@ -68,12 +68,18 @@
 
 
     # Oracle JRE+JDK+JCE
-    - name: install the oracle packages
+    - name: install the oracle packages from the internet
       script: "{{ item }}"
       with_items:
         - files/fetch_oracle_jre.sh
         - files/fetch_oracle_jdk.sh
         - files/fetch_oracle_jce.sh
+      when: "{{ not packer|bool }}"
+
+    - name: copy the java tarballs from the packer mirror
+      shell: cp -vf /opt/odpi/mirror/oracle.com/* /var/lib/ambari-server/resources/.
+      when: "{{ packer|bool }}"
+
     - name: trick the installer into using the latest jre
       file: 
         src: /var/lib/ambari-server/resources/jre-8u66-linux-x64.tar.gz
@@ -127,6 +133,13 @@
     - name: turn the server on
       service: name=ambari-server enabled=yes
 
+    - name: Poll until ambari is listening
+      wait_for: port=8080 connect_timeout=30 timeout=300
+
+    # Show how the service is listening
+    - yum: name=net-tools state=present
+    - shell: "netstat -tunlp 2>/dev/null | fgrep ':8080'"
+      ignore_errors: True
 
     # Handle blueprint
     - name: copy the blueprint to the sandbox
@@ -147,13 +160,19 @@
     - name: add the utils repo
       script: ambari_scripts/post-repo-url.py ODP 0.9 redhat7 ODP-UTILS-1.1.0.20 http://repo.opendataplatform.org/repository/ODP-UTILS-1.1.0.20/repos/centos7 
 
+    # Make sure the agent checks in ...
+    - service: name=ambari-agent state=restarted
+    - name: give ambari agent  a few seconds to settle
+      pause: seconds=5
 
     # Make the cluster
     - name: create the cluster 
       script: ambari_scripts/post-mapping.py ODP-0.9-Sandbox ODP_Sandbox
 
-
     # Wait for the cluster
     - name: wait for the cluster 
       script: ambari_scripts/wait-for-cluster.py ODP_Sandbox
 
+
+    # DEBUG
+    - fail: msg="Figure out how to wait for the cluster to finish installing now"

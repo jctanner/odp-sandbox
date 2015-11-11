@@ -8,6 +8,9 @@ import socket
 import sys
 import time
 
+from api_common import get_services
+from api_common import get_services_and_components
+
 
 def isclusterbusy(cluster_name):
     '''
@@ -26,6 +29,24 @@ def isclusterbusy(cluster_name):
     state = data.get("Clusters", {}).get("provisioning_state", None)
 
     # "provisioning_state" : "INSTALLED"
+
+    # Check the services and components
+    svcdata = get_services_and_components(cluster_name)
+    #import pdb; pdb.set_trace()
+
+    errors = 0
+    for k,v in svcdata.iteritems():
+        if v['state'] == 'INSTALL_FAILED':
+            print "# %s installation failed" % k
+            errors += 1
+
+        for k2,v2 in v['components'].iteritems():
+            if v2['state'] == 'INSTALL_FAILED':
+                print "# %s installation failed" % k2
+                errors += 1
+
+    if errors > 0:
+        sys.exit(errors)
 
     print "# state: %s" % state
     if not state or state == "INIT" or state != "INSTALLED":
