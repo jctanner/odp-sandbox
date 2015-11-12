@@ -191,7 +191,7 @@
       shell: cd /opt/odpi/ansible/ambari_scripts; python wait-for-cluster.py ODP_Sandbox
 
     - name: opcheck some commands
-      shell: {{ item }}
+      shell: "{{ item }}"
       with_items:
         - "hadoop fs -ls /"
         - "yarn node -list"
