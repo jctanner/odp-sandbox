@@ -136,6 +136,13 @@
     - name: Poll until ambari is listening
       wait_for: port=8080 connect_timeout=30 timeout=300
 
+    # Disable the priorities plugin to stop ambari agent breakage
+    - name: disable the yum priorities plugin
+      lineinfile:
+        dest: /etc/yum/pluginconf.d/priorities.conf
+        regexp: '^enabled'
+        line: "enabled=0"
+
     # Show how the service is listening
     - yum: name=net-tools state=present
     - shell: "netstat -tunlp 2>/dev/null | fgrep ':8080'"
@@ -155,10 +162,20 @@
     # then service installation dies a miserable death.
     ##################################################################
 
-    - name: add the primary repo
+    - name: add the primary repo [odpi.org]
       script: ambari_scripts/post-repo-url.py ODP 0.9 redhat7 ODP-0.9 http://repo.opendataplatform.org/repository/ODP/centos7/2.x/BUILDS/0.9.0.1-70
-    - name: add the utils repo
+      when: "{{ not packer|bool }}"
+    - name: add the utils repo [odpi.org]
       script: ambari_scripts/post-repo-url.py ODP 0.9 redhat7 ODP-UTILS-1.1.0.20 http://repo.opendataplatform.org/repository/ODP-UTILS-1.1.0.20/repos/centos7 
+      when: "{{ not packer|bool }}"
+
+    - name: add the primary repo [packer cache]
+      script: "ambari_scripts/post-repo-url.py ODP 0.9 redhat7 ODP-0.9 file:///opt/odpi/mirror/repo.opendataplatform.org/repository/ODP/centos7/2.x/BUILDS/0.9.0.1-70"
+      when: "{{ packer|bool }}"
+    - name: add the utils repo [packer cache]
+      script: "ambari_scripts/post-repo-url.py ODP 0.9 redhat7 ODP-UTILS-1.1.0.20 file:///opt/odpi/mirror/repo.opendataplatform.org/repository/ODP/centos7/2.x/BUILDS/0.9.0.1-70"
+      when: "{{ packer|bool }}"
+
 
     # Make sure the agent checks in ...
     - service: name=ambari-agent state=restarted
@@ -171,8 +188,20 @@
 
     # Wait for the cluster
     - name: wait for the cluster 
-      script: ambari_scripts/wait-for-cluster.py ODP_Sandbox
+      shell: cd /opt/odpi/ansible/ambari_scripts; python wait-for-cluster.py ODP_Sandbox
 
+    - name: opcheck some commands
+      shell: {{ item }}
+      with_items:
+        - "hadoop fs -ls /"
+        - "yarn node -list"
 
-    # DEBUG
-    - fail: msg="Figure out how to wait for the cluster to finish installing now"
+    # Stop the cluster so the system can shutdown
+    - name: stop all cluster services
+      shell: cd /opt/odpi/ansible/ambari_scripts; python stop_services.py ODP_Sandbox
+    - name: stop ambari
+      service: name={{ item }} state=stopped
+      with_items:
+        - ambari-agent
+        - ambari-server
+

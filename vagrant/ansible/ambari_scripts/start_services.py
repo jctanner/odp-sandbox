@@ -27,6 +27,10 @@ def start_services(cluster_name):
         print "# %s" % r.status_code
         #print "# %s" % r.text
 
+        if int(r.status_code) != 200:
+            print r.text
+            sys.exit(1)
+
         # null text means the service is already running
         if not r.text:
             continue
@@ -35,7 +39,10 @@ def start_services(cluster_name):
         #"href" : "http://sandbox.odp.org:8080/api/v1/clusters/ODP_Sandbox/requests/7"
         #import pdb; pdb.set_trace()
         print "# Polling %s startup" % x['ServiceInfo']['service_name']
-        poll_request(rdict['href'])
+        import pdb; pdb.set_trace()
+        print rdict
+        if 'href' in rdict:
+            poll_request(rdict['href'])
 
 
 if __name__ == "__main__":

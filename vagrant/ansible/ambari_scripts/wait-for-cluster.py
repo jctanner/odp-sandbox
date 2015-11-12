@@ -21,6 +21,8 @@ def isclusterbusy(cluster_name):
     }    
     '''
     found = False
+    installing = False
+    starting = False
     hostname = socket.gethostname()
     baseurl = "http://%s:8080/api/v1/clusters/%s" % (hostname, cluster_name)
     r = requests.get(baseurl, auth=('admin', 'admin'))
@@ -39,19 +41,31 @@ def isclusterbusy(cluster_name):
         if v['state'] == 'INSTALL_FAILED':
             print "# %s installation failed" % k
             errors += 1
+        elif v['state'] == 'INSTALLING':
+            installing = True
+        elif v['state'] == 'STARTING':
+            starting = True
+        print "# %s: %s" % (k, v['state'])
 
         for k2,v2 in v['components'].iteritems():
             if v2['state'] == 'INSTALL_FAILED':
                 print "# %s installation failed" % k2
                 errors += 1
+            elif v2['state'] == 'INSTALLING':
+                installing = True
+            elif v2['state'] == 'STARTING':
+                starting = True
+            print "#\t%s: %s" % (k2, v2['state'])
 
     if errors > 0:
         sys.exit(errors)
 
     print "# state: %s" % state
-    if not state or state == "INIT" or state != "INSTALLED":
+    if not state or state == "INIT" or state != "INSTALLED" or installing or starting:
+        # BUSY ...
         return True
     else:
+        # NOT BUSY ...
         return False
 
 

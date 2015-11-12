@@ -19,6 +19,7 @@ def poll_request(href):
         time.sleep(5)
         r = requests.get(href, auth=('admin', 'admin'), headers=headers)
         rdict = json.loads(r.text)
+        #print rdict
         if str(rdict['Requests']['end_time']) != "-1":
             print "# end_time: %s" % rdict['Requests']['end_time']
             running = False
