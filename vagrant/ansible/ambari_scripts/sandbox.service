@@ -4,7 +4,7 @@ After=syslog.target network.target
 Requires=ambari-server.service
 
 [Service]
-ExecStart=/opt/odpi/ansible/ambari_scripts/sandbox-script.py stop
+ExecStart=/opt/odpi/ansible/ambari_scripts/sandbox-script.py start
 ExecStop=/opt/odpi/ansible/ambari_scripts/sandbox-script.py stop
 
 [Install]
