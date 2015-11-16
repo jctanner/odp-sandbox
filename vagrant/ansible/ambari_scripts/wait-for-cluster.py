@@ -23,6 +23,7 @@ def isclusterbusy(cluster_name):
     found = False
     installing = False
     starting = False
+
     hostname = socket.gethostname()
     baseurl = "http://%s:8080/api/v1/clusters/%s" % (hostname, cluster_name)
     r = requests.get(baseurl, auth=('admin', 'admin'))
@@ -61,7 +62,7 @@ def isclusterbusy(cluster_name):
         sys.exit(errors)
 
     print "# state: %s" % state
-    if not state or state == "INIT" or state != "INSTALLED" or installing or starting:
+    if (not state) or (state == "INIT") or (state != "INSTALLED") or installing or starting:
         # BUSY ...
         return True
     else:

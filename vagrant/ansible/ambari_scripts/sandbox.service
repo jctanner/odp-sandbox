@@ -1,0 +1,11 @@
+[Unit]
+Description=ODPi Sandbox
+After=syslog.target network.target 
+Requires=ambari-server.service
+
+[Service]
+ExecStart=/opt/odpi/ansible/ambari_scripts/sandbox-script.py stop
+ExecStop=/opt/odpi/ansible/ambari_scripts/sandbox-script.py stop
+
+[Install]
+WantedBy=multi-user.target

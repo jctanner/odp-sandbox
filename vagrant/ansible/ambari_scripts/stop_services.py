@@ -22,6 +22,10 @@ def stop_services(cluster_name):
     payload = {"ServiceInfo": {"state" : "INSTALLED"}} 
     for x in services:
 
+        # skip services without rest endpoints
+        if not 'href' in x:
+            continue
+
         thispayload = {'RequestInfo': {'context': 'Stop %s from API' % x['ServiceInfo']['service_name']},
                        'Body': payload}
             

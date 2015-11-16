@@ -205,3 +205,16 @@
         - ambari-agent
         - ambari-server
 
+    # SYSTEMD ...
+    # cp ambari_scripts/sandbox.service /etc/systemd/system/sandbox.service
+    # chmod 664 /etc/systemd/system/sandbox.service
+    - name: copy the sandbox systemd unit script into place
+      copy: src=ambari_scripts/sandbox.service dest=/etc/systemd/system/sandbox.service mode=664
+    # systemctl daemon-reload
+    - name: reload systemd to pickup the new script
+      shell: systemctl daemon-reload
+    # systemctl enable sandbox.service
+    - name: enable the sandbox service
+      service: name=sandbox enabled=yes
+
+    #- fail: msg="check if the sandbox init script was setup correctly now"

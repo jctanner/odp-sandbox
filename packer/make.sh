@@ -1,9 +1,17 @@
 #!/bin/bash
 
+PACKER=$PACKER
+if [ -z "$PACKER" ]; then
+    PACKER="packer"
+fi
+#echo "PACKER=$PACKER"
+#exit 1
+
+
 rm -rf builds/*
 
 PACKER_LOG=1 PACKER_LOG_PATH=packer.log \
-    packer build --only=virtualbox-iso $@ centos7.json 
+    $PACKER build --only=virtualbox-iso $@ centos7.json 
 RC=$?
 if [[ $RC -ne 0 ]]; then
     echo "packer build failed"
