@@ -21,11 +21,15 @@ def stop_services(cluster_name):
     headers = {'X-Requested-By': 'AMBARI'}
     payload = {"ServiceInfo": {"state" : "INSTALLED"}} 
     for x in services:
+
+        thispayload = {'RequestInfo': {'context': 'Stop %s from API' % x['ServiceInfo']['service_name']},
+                       'Body': payload}
+            
         print x
         r = requests.put(x['href'], auth=('admin', 'admin'), 
-                         data=json.dumps(payload), headers=headers)
+                         data=json.dumps(thispayload), headers=headers)
         print "# %s" % r.status_code
-        #print "# %s" % r.text
+        print "# %s" % r.text
 
         # null text means the service is already running
         if not r.text:

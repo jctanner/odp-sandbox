@@ -8,22 +8,22 @@ import socket
 import sys
 import time
 
-def poll_request(href):
+def poll_request(href, name=None):
 
     headers = {'X-Requested-By': 'AMBARI'}
     running = True
     count = 0
     while ((running) and (count < 50)):
         count += 1
-        print "#%s: sleeping 5s" % count
+        print "# %s - %s: sleeping 5s" % (name, count)
         time.sleep(5)
         r = requests.get(href, auth=('admin', 'admin'), headers=headers)
         rdict = json.loads(r.text)
         #print rdict
         if str(rdict['Requests']['end_time']) != "-1":
-            print "# end_time: %s" % rdict['Requests']['end_time']
+            print "# %s - end_time: %s" % (name, rdict['Requests']['end_time'])
             running = False
-        print "# end_time: %s" % rdict['Requests']['end_time']
+        print "# %s - end_time: %s" % (name, rdict['Requests']['end_time'])
         #import pdb; pdb.set_trace()
     
 

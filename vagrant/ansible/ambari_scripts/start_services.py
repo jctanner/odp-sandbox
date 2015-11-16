@@ -21,9 +21,15 @@ def start_services(cluster_name):
     headers = {'X-Requested-By': 'AMBARI'}
     payload = {"ServiceInfo": {"state" : "STARTED"}} 
     for x in services:
+
+        # {"RequestInfo": {"context" :"Start YARN via REST"}, "Body": {"ServiceInfo": {"state": "STARTED"}}}
+
+        thispayload = {'RequestInfo': {'context': 'Start %s from API' % x['ServiceInfo']['service_name']},
+                       'Body': payload}
+
         print "# Starting: %s" % x
         r = requests.put(x['href'], auth=('admin', 'admin'), 
-                         data=json.dumps(payload), headers=headers)
+                         data=json.dumps(thispayload), headers=headers)
         print "# PUT: %s" % r.status_code
         #print "# %s" % r.text
         #import pdb; pdb.set_trace()
@@ -56,7 +62,7 @@ def start_services(cluster_name):
             #import pdb; pdb.set_trace()
             print rdict
             if 'href' in rdict:
-                poll_request(rdict['href'])
+                poll_request(rdict['href'], name=x)
 
 
 if __name__ == "__main__":
