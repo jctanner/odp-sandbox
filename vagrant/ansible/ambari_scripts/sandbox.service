@@ -1,9 +1,12 @@
 [Unit]
 Description=ODPi Sandbox
 After=syslog.target network.target 
-Requires=ambari-server.service
+#Requires=ambari-server.service ambari-agent.service
+#After=ambari-server.service ambari-agent.service
 
 [Service]
+Type=oneshot
+RemainAfterExit=yes
 ExecStart=/opt/odpi/ansible/ambari_scripts/sandbox-script.py start
 ExecStop=/opt/odpi/ansible/ambari_scripts/sandbox-script.py stop
 
