@@ -1,7 +1,6 @@
 #!/bin/bash
 
-mkdir -p /opt/odpi/mirror
+yum -y update
+
+mkdir -p /opt/odpi
 chmod -R 777 /opt
-
-
-find /opt -type d | xargs ls -al

@@ -16,16 +16,6 @@
       "script": "scripts/vbox_guest_additions.sh"
     },    
     {
-      "type": "file",
-      "source": "mirror/repo.opendataplatform.org",
-      "destination": "/opt/odpi/mirror/"
-    },
-    {
-      "type": "file",
-      "source": "mirror/oracle.com",
-      "destination": "/opt/odpi/mirror/"
-    },
-    {
       "type": "shell",
       "execute_command": "echo 'vagrant' | {{.Vars}} sudo -S -E bash '{{.Path}}'",
       "script": "scripts/ansible.sh"
@@ -36,7 +26,7 @@
       "playbook_dir": "ansible",
       "staging_directory": "/opt/odpi/ansible",
       "inventory_file": "ansible/inventory.packer",
-      "extra_arguments": ["-v", "-e", "packer=True"]
+      "extra_arguments": ["-v"]
     },
     {
       "type": "shell",
@@ -103,41 +93,13 @@
           "2"
         ]
       ]
-    },
-    {
-      "type": "vmware-iso",
-      "boot_command": [
-        "<tab> text ks=http://{{ .HTTPIP }}:{{ .HTTPPort }}/centos-7-ks.cfg<enter><wait>"
-      ],
-      "boot_wait": "10s",
-      "disk_size": 81920,
-      "guest_os_type": "centos-64",
-      "headless": true,
-      "http_directory": "http",
-      "iso_urls": [
-        "isos/CentOS-7-x86_64-Minimal-1503-01.iso",
-        "http://centos.mirrors.hoobly.com/7/isos/x86_64/CentOS-7-x86_64-Minimal-1503-01.iso"
-      ],
-      "iso_checksum_type": "md5",
-      "iso_checksum": "d07ab3e615c66a8b2e9a50f4852e6a77",
-      "ssh_username": "vagrant",
-      "ssh_password": "vagrant",
-      "ssh_port": 22,
-      "ssh_wait_timeout": "10000s",
-      "shutdown_command": "echo 'vagrant'|sudo -S /sbin/halt -h -p",
-      "tools_upload_flavor": "linux",
-      "vm_name": "ODPi-sandbox-centos-7-x86_64",
-      "vmx_data": {
-        "cpuid.coresPerSocket": "1",
-        "memsize": "512",
-        "numvcpus": "2"
-      }
     }
   ],
   "post-processors": [
     {
+      "type": "vagrant",
       "output": "builds/{{.Provider}}-centos7.box",
-      "type": "vagrant"
+      "keep_input_artifact": true
     }
   ]
 }

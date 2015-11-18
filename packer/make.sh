@@ -18,5 +18,5 @@ if [[ $RC -ne 0 ]]; then
     exit $RC
 fi
 
-vagrant box remove odpi-test-0
+vagrant box remove --force odpi-test-0
 vagrant box add --name odpi-test-0 --provider virtualbox builds/virtualbox-centos7.box    

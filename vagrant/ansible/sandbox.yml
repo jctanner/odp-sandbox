@@ -3,13 +3,10 @@
   gather_facts: True
   sudo: True
   sudo_user: root
-  vars:
-    packer: False
   tasks:
 
     - name: set the hostname to sandbox.odp.org
       shell: hostnamectl set-hostname sandbox.odp.org
-
 
     - name: ensure libsolve goes to the right IP address
       lineinfile:
@@ -18,100 +15,68 @@
         line: "{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] + ' sandbox.odp.org' }}"
         state: present
 
-
     - name: add the ODPi repos
       copy: 
         src: "{{ 'files/'+ item }}"
         dest: "{{ '/etc/yum.repos.d/' + item }}"
       with_items:
         - ambari.repo
-
-    # Install the priorities plugin
-    - name: install yum-plugin-priorities
-      yum: name=yum-plugin-priorities state=present
-
-    - debug: var=packer
-
-    # copy the local odpi mirror for faster install times during image creation
-    - file: path=/opt/odpi/mirror state=directory
-      when: "{{ not packer|bool }}"
-    
-    - name: copy the repo mirror from the /vagrant mount
-      shell: rsync -avz /vagrant/mirror /opt/odpi      
-      when: "{{ not packer|bool }}"
-
-    - copy: src=files/odpi-local-mirror.repo dest=/etc/yum.repos.d/odpi-local-mirror.repo
-
-    # DEBUG
-    #- fail: msg="debug quit"
  
     - name: install epel-release
       yum: name=epel-release state=present
-  
-    - name: install ambari packages with local cache
-      yum: name={{ item }} state=latest disablerepo=ambari,ambari-utils
-      with_items:
-        - ambari-agent
-        - ambari-server
-      when: "{{ packer|bool }}"
 
     - name: install ambari packages
       yum: name={{ item }} state=latest
       with_items:
         - ambari-agent
         - ambari-server
-      when: "{{ not packer|bool }}"
-
 
     - name: install api helper packages
       yum: name=python-requests state=present
 
-
     # Oracle JRE+JDK+JCE
     - name: install the oracle packages from the internet
-      script: "{{ item }}"
-      with_items:
-        - files/fetch_oracle_jre.sh
-        - files/fetch_oracle_jdk.sh
-        - files/fetch_oracle_jce.sh
-      when: "{{ not packer|bool }}"
+      script: files/fetch_all_oracle_tars.sh
 
-    - name: copy the java tarballs from the packer mirror
-      shell: cp -vf /opt/odpi/mirror/oracle.com/* /var/lib/ambari-server/resources/.
-      when: "{{ packer|bool }}"
-
+    # FIXME - file a bug or consult list
     - name: trick the installer into using the latest jre
       file: 
         src: /var/lib/ambari-server/resources/jre-8u66-linux-x64.tar.gz
         dest: /var/lib/ambari-server/resources/jre-8u40-linux-x64.tar.gz
         state: link
+    # FIXME - file a bug or consult list
     - name: trick the installer into using the latest jdk
       file: 
         src: /var/lib/ambari-server/resources/jdk-8u66-linux-x64.tar.gz
         dest: /var/lib/ambari-server/resources/jdk-8u40-linux-x64.tar.gz
         state: link
 
-
+    ##############################
     # Ambari Agent
+    ##############################
     - name: set the hostname in the agent config
       lineinfile:
         dest: /etc/ambari-agent/conf/ambari-agent.ini
         regexp: '^hostname='
         line: "hostname=sandbox.odp.org"
+    # FIXME - file a bug or consult list
     - name: workaround bug in recent ambari agent
       file: path=/var/lib/ambari-agent/keys state=directory
     - name: start the agent
       service: name=ambari-agent state=started
     - service: name=ambari-agent enabled=true
 
+    ##############################
     # Postgres
+    ##############################
     - name: initialize postgres
       shell: service postgresql initdb creates=/var/lib/pgsql/data/pg_hba.conf
     - service: name=postgresql enabled=true
     - service: name=postgresql state=started
 
-
+    ##############################
     # Ambari server
+    ##############################
     - name: check if the service was already initialized
       shell: "[ -f /var/lib/ambari-server/keys/ca.crt ]"
       ignore_errors: True
@@ -136,19 +101,14 @@
     - name: Poll until ambari is listening
       wait_for: port=8080 connect_timeout=30 timeout=300
 
-    # Disable the priorities plugin to stop ambari agent breakage
-    - name: disable the yum priorities plugin
-      lineinfile:
-        dest: /etc/yum/pluginconf.d/priorities.conf
-        regexp: '^enabled'
-        line: "enabled=0"
-
     # Show how the service is listening
     - yum: name=net-tools state=present
     - shell: "netstat -tunlp 2>/dev/null | fgrep ':8080'"
       ignore_errors: True
 
-    # Handle blueprint
+    ##############################
+    # Blueprint
+    ##############################
     - name: copy the blueprint to the sandbox
       copy: src=files/odp-v2.blueprint dest=/root/odp-v2.blueprint      
     - name: apply the blueprint
@@ -164,25 +124,18 @@
 
     - name: add the primary repo [odpi.org]
       script: ambari_scripts/post-repo-url.py ODP 0.9 redhat7 ODP-0.9 http://repo.opendataplatform.org/repository/ODP/centos7/2.x/BUILDS/0.9.0.1-70
-      when: "{{ not packer|bool }}"
     - name: add the utils repo [odpi.org]
       script: ambari_scripts/post-repo-url.py ODP 0.9 redhat7 ODP-UTILS-1.1.0.20 http://repo.opendataplatform.org/repository/ODP-UTILS-1.1.0.20/repos/centos7 
-      when: "{{ not packer|bool }}"
-
-    - name: add the primary repo [packer cache]
-      script: "ambari_scripts/post-repo-url.py ODP 0.9 redhat7 ODP-0.9 file:///opt/odpi/mirror/repo.opendataplatform.org/repository/ODP/centos7/2.x/BUILDS/0.9.0.1-70"
-      when: "{{ packer|bool }}"
-    - name: add the utils repo [packer cache]
-      script: "ambari_scripts/post-repo-url.py ODP 0.9 redhat7 ODP-UTILS-1.1.0.20 file:///opt/odpi/mirror/repo.opendataplatform.org/repository/ODP/centos7/2.x/BUILDS/0.9.0.1-70"
-      when: "{{ packer|bool }}"
-
 
     # Make sure the agent checks in ...
     - service: name=ambari-agent state=restarted
     - name: give ambari agent  a few seconds to settle
       pause: seconds=5
 
-    # Make the cluster
+
+    ##############################
+    # Host Mapping -> Cluster
+    ##############################
     - name: create the cluster 
       script: ambari_scripts/post-mapping.py ODP-0.9-Sandbox ODP_Sandbox
 
@@ -198,7 +151,7 @@
 
     # Stop the cluster so the system can shutdown
     - name: stop all cluster services
-      shell: cd /opt/odpi/ansible/ambari_scripts; python stop_services.py ODP_Sandbox
+      shell: cd /opt/odpi/ansible/ambari_scripts; ./sandbox-script.py stop
     - name: stop ambari
       service: name={{ item }} state=stopped
       with_items:
@@ -206,15 +159,9 @@
         - ambari-server
 
     # SYSTEMD ...
-    # cp ambari_scripts/sandbox.service /etc/systemd/system/sandbox.service
-    # chmod 664 /etc/systemd/system/sandbox.service
     - name: copy the sandbox systemd unit script into place
       copy: src=ambari_scripts/sandbox.service dest=/etc/systemd/system/sandbox.service mode=664
-    # systemctl daemon-reload
     - name: reload systemd to pickup the new script
       shell: systemctl daemon-reload
-    # systemctl enable sandbox.service
     - name: enable the sandbox service
       service: name=sandbox enabled=yes
-
-    #- fail: msg="check if the sandbox init script was setup correctly now"
