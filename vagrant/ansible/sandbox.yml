@@ -142,9 +142,11 @@
     # Wait for the cluster
     - name: wait for the cluster 
       shell: cd /opt/odpi/ansible/ambari_scripts; python wait-for-cluster.py ODP_Sandbox
+      ignore_errors: True
 
     - name: opcheck some commands
       shell: "{{ item }}"
+      ignore_errors: True
       with_items:
         - "hadoop fs -ls /"
         - "yarn node -list"
@@ -152,8 +154,10 @@
     # Stop the cluster so the system can shutdown
     - name: stop all cluster services
       shell: cd /opt/odpi/ansible/ambari_scripts; ./sandbox-script.py stop
+      ignore_errors: True
     - name: stop ambari
       service: name={{ item }} state=stopped
+      ignore_errors: True
       with_items:
         - ambari-agent
         - ambari-server
