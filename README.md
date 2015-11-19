@@ -1,5 +1,4 @@
-# odpi-sandbox
-ODPi sandbox automation
+# ODPi sandbox automation
 
 An open framework for building ODPi compliant sandboxes.
 
