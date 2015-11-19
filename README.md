@@ -12,11 +12,13 @@ Quickstart
 ----------
 
 ````shell
+# Building the sandbox
 cd packer
 ./make.sh
 ````
 
 ````shell
+# Running the sandbox
 cd vagrant
 vagrant up
 ````
