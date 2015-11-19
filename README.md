@@ -22,3 +22,8 @@ cd packer
 cd vagrant
 vagrant up
 ````
+
+Prequisites
+-----------
+* packer - https://www.packer.io/
+* vagrant - https://www.vagrantup.com/
